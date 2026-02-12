@@ -45,14 +45,14 @@
 
 //   const total = Math.max(subtotal + gst - discount, 0);
 
-//   /* ================= QTY HANDLERS ================= */
+//   /* ================= QTY ================= */
 //   const increaseQty = (index) => {
 //     setCart((prev) =>
-//       prev.map((item, i) => {
-//         if (i !== index) return item;
-//         if (item.qty >= item.stock) return item;
-//         return { ...item, qty: item.qty + 1 };
-//       }),
+//       prev.map((item, i) =>
+//         i === index && item.qty < item.stock
+//           ? { ...item, qty: item.qty + 1 }
+//           : item,
+//       ),
 //     );
 //   };
 
@@ -65,7 +65,6 @@
 //   };
 
 //   /* ================= SUBMIT ================= */
-
 //   const handleSubmit = async () => {
 //     if (!customer.name || !isValidPhone(customer.phone)) {
 //       alert("Enter valid customer details");
@@ -74,6 +73,29 @@
 
 //     if (cart.length === 0) {
 //       alert("Cart is empty");
+//       return;
+//     }
+
+//     const selectedAddressObj = addresses.find(
+//       (a) => String(a.id) === String(selectedAddress),
+//     );
+
+//     let addressData = null;
+
+//     if (selectedAddressObj) {
+//       addressData = selectedAddressObj;
+//     } else if (showNewAddress) {
+//       addressData = newAddress;
+//     }
+
+//     if (
+//       !addressData ||
+//       !addressData.address ||
+//       !addressData.city ||
+//       !addressData.state ||
+//       !addressData.pincode
+//     ) {
+//       alert("Please provide complete address");
 //       return;
 //     }
 
@@ -87,6 +109,14 @@
 
 //       customer_name: customer.name,
 //       customer_phone: customer.phone,
+
+//       address_snapshot: {
+//         address: addressData.address,
+//         city: addressData.city,
+//         state: addressData.state,
+//         country: addressData.country || "India",
+//         pincode: addressData.pincode,
+//       },
 
 //       items: cart.map((item) => ({
 //         product_id: item.product_id,
@@ -106,6 +136,31 @@
 //       }
 //     } catch (err) {
 //       alert(err.response?.data?.message || "Order failed");
+//     }
+//   };
+
+//   const fetchCityState = async (pincode) => {
+//     if (pincode.length !== 6) return;
+
+//     try {
+//       const res = await fetch(
+//         `https://api.postalpincode.in/pincode/${pincode}`,
+//       );
+//       const data = await res.json();
+
+//       if (
+//         data?.[0]?.Status === "Success" &&
+//         data?.[0]?.PostOffice?.length > 0
+//       ) {
+//         const info = data[0].PostOffice[0];
+//         setNewAddress((prev) => ({
+//           ...prev,
+//           city: info.District || "",
+//           state: info.State || "",
+//         }));
+//       }
+//     } catch (err) {
+//       console.error("Pin API failed", err);
 //     }
 //   };
 
@@ -135,6 +190,7 @@
 
 //                 if (res.data.success) {
 //                   const user = res.data.data;
+
 //                   setSelectedCustomer(user);
 
 //                   setCustomer((p) => ({
@@ -142,26 +198,15 @@
 //                     name: user.name,
 //                   }));
 
-//                   if (res.data.success) {
-//                     const user = res.data.data;
-
-//                     setSelectedCustomer(user);
-
-//                     setCustomer((p) => ({
-//                       ...p,
-//                       name: user.name,
-//                     }));
-
-//                     // 🔥 USE ADDRESSES FROM SAME RESPONSE
-//                     if (user.addresses && user.addresses.length > 0) {
-//                       setAddresses(user.addresses);
-//                       setSelectedAddress(user.addresses[0].id);
-//                       setShowNewAddress(false);
-//                     } else {
-//                       setAddresses([]);
-//                       setSelectedAddress(null);
-//                       setShowNewAddress(true);
-//                     }
+//                   // ✅ USE ADDRESSES FROM SAME RESPONSE
+//                   if (user.addresses && user.addresses.length > 0) {
+//                     setAddresses(user.addresses);
+//                     setSelectedAddress(user.addresses[0].id);
+//                     setShowNewAddress(false);
+//                   } else {
+//                     setAddresses([]);
+//                     setSelectedAddress(null);
+//                     setShowNewAddress(true);
 //                   }
 //                 } else {
 //                   setSelectedCustomer(null);
@@ -189,20 +234,20 @@
 //           }`}
 //         />
 
-//         {/* ================= ADDRESS UI ================= */}
-
+//         {/* ADDRESS UI */}
 //         {selectedCustomer && (
-//           <div className="mt-2 space-y-2">
+//           <div className="mt-3 space-y-3">
+//             {/* EXISTING ADDRESSES */}
 //             {addresses.length > 0 && !showNewAddress && (
 //               <>
-//                 <label className="text-xs font-medium text-gray-600">
-//                   Select Address
+//                 <label className="text-xs font-semibold text-gray-600">
+//                   Select Delivery Address
 //                 </label>
 
 //                 <select
 //                   value={selectedAddress || ""}
 //                   onChange={(e) => setSelectedAddress(e.target.value)}
-//                   className="w-full border rounded-lg px-3 py-2 text-sm"
+//                   className="w-full border rounded-lg px-3 py-2 text-sm bg-white"
 //                 >
 //                   {addresses.map((addr) => (
 //                     <option key={addr.id} value={addr.id}>
@@ -212,17 +257,31 @@
 //                   ))}
 //                 </select>
 
-//                 <button
-//                   onClick={() => setShowNewAddress(true)}
-//                   className="text-xs text-blue-600 underline"
-//                 >
-//                   + Add New Address
-//                 </button>
+//                 <div className="flex gap-4 text-xs">
+//                   <button
+//                     onClick={() => setShowNewAddress(true)}
+//                     className="text-blue-600 underline"
+//                   >
+//                     + Add New
+//                   </button>
+
+//                   <button
+//                     onClick={() => {
+//                       setSelectedAddress(null);
+//                       setAddresses([]);
+//                       setShowNewAddress(true);
+//                     }}
+//                     className="text-gray-500 underline"
+//                   >
+//                     Cancel
+//                   </button>
+//                 </div>
 //               </>
 //             )}
 
+//             {/* NEW ADDRESS FORM */}
 //             {showNewAddress && (
-//               <div className="space-y-2 p-3 border rounded-lg bg-gray-50">
+//               <div className="p-3 border rounded-lg bg-gray-50 space-y-3">
 //                 <input
 //                   placeholder="Address Line"
 //                   value={newAddress.address_line}
@@ -265,23 +324,96 @@
 //                   placeholder="Pincode"
 //                   maxLength={6}
 //                   value={newAddress.pincode}
-//                   onChange={(e) =>
-//                     setNewAddress({
-//                       ...newAddress,
-//                       pincode: e.target.value.replace(/\D/g, ""),
-//                     })
-//                   }
+//                   onChange={(e) => {
+//                     const value = e.target.value.replace(/\D/g, "");
+
+//                     setNewAddress((prev) => ({
+//                       ...prev,
+//                       pincode: value,
+//                     }));
+
+//                     // ✅ CALL API WHEN 6 DIGITS
+//                     if (value.length === 6) {
+//                       fetchCityState(value);
+//                     }
+//                   }}
 //                   className="w-full border rounded px-3 py-2 text-sm"
 //                 />
 
-//                 {addresses.length > 0 && (
+//                 {/* ACTION BUTTONS */}
+//                 <div className="flex justify-end gap-3 text-xs">
+//                   {addresses.length > 0 && (
+//                     <button
+//                       onClick={() => setShowNewAddress(false)}
+//                       className="text-gray-500 underline"
+//                     >
+//                       Cancel
+//                     </button>
+//                   )}
+
 //                   <button
-//                     onClick={() => setShowNewAddress(false)}
-//                     className="text-xs text-gray-500 underline"
+//                     onClick={async () => {
+//                       if (
+//                         !newAddress.address_line ||
+//                         !newAddress.city ||
+//                         !newAddress.state ||
+//                         newAddress.pincode.length !== 6
+//                       ) {
+//                         alert("Please fill all address fields properly");
+//                         return;
+//                       }
+
+//                       try {
+//                         const payload = {
+//                           user_id: selectedCustomer?.id,
+//                           name: customer.name, // ✅ THIS IS REQUIRED
+//                           phone: customer.phone,
+//                           address: newAddress.address_line,
+//                           city: newAddress.city,
+//                           state: newAddress.state,
+//                           pincode: newAddress.pincode,
+//                         };
+
+//                         const res = await api.post(
+//                           "/admin-dashboard/save-address",
+//                           payload,
+//                         );
+
+//                         if (res.data.success) {
+//                           const savedAddress = res.data.data; // backend must return full address object
+
+//                           // Add to dropdown
+//                           setAddresses((prev) => [...prev, savedAddress]);
+
+//                           // Select newly saved address
+//                           setSelectedAddress(savedAddress.id);
+
+//                           setShowNewAddress(false);
+
+//                           // Clear form
+//                           setNewAddress({
+//                             address_line: "",
+//                             city: "",
+//                             state: "",
+//                             pincode: "",
+//                           });
+
+//                           alert("Address saved successfully");
+//                         } else {
+//                           alert(res.data.message);
+//                         }
+//                       } catch (err) {
+//                         alert(
+//                           err.response?.data?.message ||
+//                             "Failed to save address",
+//                         );
+//                       }
+//                     }}
+//                     className="text-green-600 underline font-semibold"
 //                   >
-//                     Cancel
+//                     Save Address
 //                   </button>
-//                 )}
+//                 </div>
 //               </div>
 //             )}
 //           </div>
@@ -290,53 +422,57 @@
 
 //       {/* ITEMS */}
 //       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-//         {cart.map((item, i) => {
-//           const outOfStock = item.stock <= 0;
-//           const maxReached = item.qty >= item.stock;
-
-//           return (
-//             <div
-//               key={i}
-//               className="border rounded-xl p-3 flex justify-between items-center"
-//             >
-//               <div>
-//                 <p className="font-medium text-sm">{item.product_name}</p>
-//                 <p className="text-xs text-gray-500">{item.variation_name}</p>
-//                 <p className="text-sm mt-1 font-semibold">₹ {item.price}</p>
-//               </div>
-
-//               <div className="flex items-center gap-2">
-//                 <button
-//                   onClick={() => decreaseQty(i)}
-//                   className="h-8 w-8 border rounded-lg"
-//                 >
-//                   −
-//                 </button>
-
-//                 <span>{item.qty}</span>
-
-//                 <button
-//                   disabled={outOfStock || maxReached}
-//                   onClick={() => increaseQty(i)}
-//                   className="h-8 w-8 border rounded-lg"
-//                 >
-//                   +
-//                 </button>
-//               </div>
+//         {cart.map((item, i) => (
+//           <div
+//             key={i}
+//             className="border rounded-xl p-3 flex justify-between items-center"
+//           >
+//             <div>
+//               <p className="font-medium text-sm">{item.product_name}</p>
+//               <p className="text-xs text-gray-500">{item.variation_name}</p>
+//               <p className="text-sm mt-1 font-semibold">₹ {item.price}</p>
 //             </div>
-//           );
-//         })}
+
+//             <div className="flex items-center gap-2">
+//               <button
+//                 onClick={() => decreaseQty(i)}
+//                 className="h-8 w-8 border rounded-lg"
+//               >
+//                 −
+//               </button>
+//               <span>{item.qty}</span>
+//               <button
+//                 onClick={() => increaseQty(i)}
+//                 className="h-8 w-8 border rounded-lg"
+//               >
+//                 +
+//               </button>
+//             </div>
+//           </div>
+//         ))}
 //       </div>
 
 //       {/* SUMMARY */}
 //       <div className="border-t p-4 space-y-3 text-sm">
 //         <Row label="Subtotal" value={`₹ ${subtotal.toFixed(2)}`} />
+
+//         <div className="flex justify-between items-center">
+//           <span>Discount</span>
+//           <input
+//             type="number"
+//             min={0}
+//             value={discount}
+//             onChange={(e) => setDiscount(Number(e.target.value))}
+//             className="w-24 border rounded px-2 py-1 text-right"
+//           />
+//         </div>
+
 //         <Row label="GST" value={`₹ ${gst.toFixed(2)}`} />
 //         <Row label="Total" value={`₹ ${total.toFixed(2)}`} />
 //       </div>
 
 //       {/* PAYMENT */}
-//       <div className="p-4 border-t space-y-3">
+//       <div className="p-4 border-t">
 //         <button
 //           disabled={
 //             cart.length === 0 || !customer.name || !isValidPhone(customer.phone)
@@ -371,6 +507,12 @@ export default function CartPanel({ cart = [], setCart }) {
   });
 
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+  /* ================= OTP STATES ================= */
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [pendingPayload, setPendingPayload] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   /* ================= ADDRESS ================= */
   const [addresses, setAddresses] = useState([]);
@@ -438,6 +580,66 @@ export default function CartPanel({ cart = [], setCart }) {
       return;
     }
 
+    const selectedAddressObj = addresses.find(
+      (a) => String(a.id) === String(selectedAddress),
+    );
+
+    let addressData = null;
+
+    if (selectedAddressObj) {
+      addressData = selectedAddressObj;
+    } else if (showNewAddress) {
+      addressData = newAddress;
+    }
+
+    // if (
+    //   !addressData ||
+    //   !addressData.address ||
+    //   !addressData.city ||
+    //   !addressData.state ||
+    //   !addressData.pincode
+    // ) {
+    //   alert("Please provide complete address");
+    //   return;
+    // }
+
+    if (
+      !addressData ||
+      !(addressData.address_line || addressData.address) ||
+      !addressData.city ||
+      !addressData.state ||
+      !addressData.pincode
+    ) {
+      alert("Please provide complete address");
+      return;
+    }
+
+    // const payload = {
+    //   customer_id: selectedCustomer?.id || null,
+    //   address_id: selectedAddress || null,
+    //   new_address: showNewAddress ? newAddress : null,
+
+    //   payment_method: paymentMode,
+    //   paid_amount: Number(total.toFixed(2)),
+
+    //   customer_name: customer.name,
+    //   customer_phone: customer.phone,
+
+    //   address_snapshot: {
+    //     address: addressData.address,
+    //     city: addressData.city,
+    //     state: addressData.state,
+    //     country: addressData.country || "India",
+    //     pincode: addressData.pincode,
+    //   },
+
+    //   items: cart.map((item) => ({
+    //     product_id: item.product_id,
+    //     variant_id: item.variation_id,
+    //     qty: item.qty,
+    //   })),
+    // };
+
     const payload = {
       customer_id: selectedCustomer?.id || null,
       address_id: selectedAddress || null,
@@ -446,8 +648,22 @@ export default function CartPanel({ cart = [], setCart }) {
       payment_method: paymentMode,
       paid_amount: Number(total.toFixed(2)),
 
+      // ADD THESE
+      subtotal: subtotal,
+      discount_total: discount,
+      tax_total: gst,
+      grand_total: total,
+
       customer_name: customer.name,
       customer_phone: customer.phone,
+
+      address_snapshot: {
+        address: addressData.address_line || addressData.address,
+        city: addressData.city,
+        state: addressData.state,
+        country: addressData.country || "India",
+        pincode: addressData.pincode,
+      },
 
       items: cart.map((item) => ({
         product_id: item.product_id,
@@ -457,16 +673,63 @@ export default function CartPanel({ cart = [], setCart }) {
     };
 
     try {
-      const res = await api.post("/admin-dashboard/pos/create-order", payload);
+      setLoading(true);
 
-      if (res.data.success) {
-        alert(`Order Created: ${res.data.data.invoice_number}`);
-        setCart([]);
+      // STEP 1 → SEND OTP
+      const otpRes = await api.post("/admin-dashboard/send-order-otp", payload);
+
+      if (otpRes.data.success) {
+        setPendingPayload(payload);
+        setPendingId(otpRes.data.pending_id); // 🔥 VERY IMPORTANT
+        setShowOtpModal(true);
+        alert("OTP sent to WhatsApp");
       } else {
-        alert(res.data.message);
+        alert(otpRes.data.message);
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Order failed");
+      alert(err.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp) {
+      alert("Enter OTP");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const verifyRes = await api.post("/admin-dashboard/verify-order-otp", {
+        otp,
+        pending_id: pendingId,
+      });
+
+      if (verifyRes.data.success) {
+        // STEP 2 → AFTER VERIFY CREATE ORDER
+        const orderRes = await api.post(
+          "/admin-dashboard/pos/create-order",
+          pendingPayload,
+        );
+
+        if (orderRes.data.success) {
+          alert(`Order Created: ${orderRes.data.data.invoice_number}`);
+          setCart([]);
+          setShowOtpModal(false);
+          setOtp("");
+          setPendingPayload(null);
+        } else {
+          alert(orderRes.data.message);
+        }
+      } else {
+        alert(verifyRes.data.message);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "OTP verification failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -655,12 +918,19 @@ export default function CartPanel({ cart = [], setCart }) {
                   placeholder="Pincode"
                   maxLength={6}
                   value={newAddress.pincode}
-                  onChange={(e) =>
-                    setNewAddress({
-                      ...newAddress,
-                      pincode: e.target.value.replace(/\D/g, ""),
-                    })
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+
+                    setNewAddress((prev) => ({
+                      ...prev,
+                      pincode: value,
+                    }));
+
+                    // ✅ CALL API WHEN 6 DIGITS
+                    if (value.length === 6) {
+                      fetchCityState(value);
+                    }
+                  }}
                   className="w-full border rounded px-3 py-2 text-sm"
                 />
 
@@ -676,25 +946,62 @@ export default function CartPanel({ cart = [], setCart }) {
                   )}
 
                   <button
-                    onClick={() => {
-                      // Save locally to state only
-                      const tempId = Date.now();
+                    onClick={async () => {
+                      if (
+                        !newAddress.address_line ||
+                        !newAddress.city ||
+                        !newAddress.state ||
+                        newAddress.pincode.length !== 6
+                      ) {
+                        alert("Please fill all address fields properly");
+                        return;
+                      }
 
-                      const newAddrObj = {
-                        id: tempId,
-                        ...newAddress,
-                      };
+                      try {
+                        const payload = {
+                          user_id: selectedCustomer?.id,
+                          name: customer.name, // ✅ THIS IS REQUIRED
+                          phone: customer.phone,
+                          address: newAddress.address_line,
+                          city: newAddress.city,
+                          state: newAddress.state,
+                          pincode: newAddress.pincode,
+                        };
 
-                      setAddresses([...addresses, newAddrObj]);
-                      setSelectedAddress(tempId);
-                      setShowNewAddress(false);
+                        const res = await api.post(
+                          "/admin-dashboard/save-address",
+                          payload,
+                        );
 
-                      setNewAddress({
-                        address_line: "",
-                        city: "",
-                        state: "",
-                        pincode: "",
-                      });
+                        if (res.data.success) {
+                          const savedAddress = res.data.data; // backend must return full address object
+
+                          // Add to dropdown
+                          setAddresses((prev) => [...prev, savedAddress]);
+
+                          // Select newly saved address
+                          setSelectedAddress(savedAddress.id);
+
+                          setShowNewAddress(false);
+
+                          // Clear form
+                          setNewAddress({
+                            address_line: "",
+                            city: "",
+                            state: "",
+                            pincode: "",
+                          });
+
+                          alert("Address saved successfully");
+                        } else {
+                          alert(res.data.message);
+                        }
+                      } catch (err) {
+                        alert(
+                          err.response?.data?.message ||
+                            "Failed to save address",
+                        );
+                      }
                     }}
                     className="text-green-600 underline font-semibold"
                   >
@@ -770,6 +1077,39 @@ export default function CartPanel({ cart = [], setCart }) {
           Proceed to Pay ₹ {total.toFixed(2)}
         </button>
       </div>
+
+      {/* OTP MODAL */}
+      {showOtpModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-80 space-y-4">
+            <h3 className="text-lg font-semibold text-center">Enter OTP</h3>
+
+            <input
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="Enter OTP"
+              className="w-full border rounded px-3 py-2 text-center"
+            />
+
+            <div className="flex justify-between">
+              <button
+                onClick={() => setShowOtpModal(false)}
+                className="text-gray-500"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleVerifyOtp}
+                disabled={loading}
+                className="bg-green-700 text-white px-4 py-2 rounded"
+              >
+                {loading ? "Verifying..." : "Verify"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
