@@ -18,6 +18,7 @@ import api from "../api/axios";
 import { useAppSettings } from "../context/AppSettingsContext";
 import { useLogoSettings } from "../context/LogoSettingsContext";
 import defaultimage from "../assets/profile.jpg";
+import { isHerbal, isHamsini } from "../config/projectConfig.js";
 
 const SIDEBAR_WIDTH = "88px";
 const FALLBACK_LOGO = defaultimage;
@@ -88,10 +89,53 @@ export default function Sidebar({ open, setOpen, logout }) {
 
         {/* MENU */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-1">
-          <Item to="/dashboard" icon={Home} label="Dashboard" />
-          <Item to="/products" icon={Box} label="Products" />
+          {isHerbal ? (
+            <>
+              <Item to="/dashboard" icon={Home} label="Dashboard" />
+              <Item to="/products" icon={Box} label="Products" />
+              <Item to="/add-categories" icon={Tag} label="Add Category" />
+              <Item to="/pos" icon={ShoppingCart} label="POS" />
+              <Item to="/pos/orders" icon={Users} label="Pos Orders" />
 
-          {Projectname === "Herbal" ? (
+              <Item to="/online-orders" icon={Package} label="Online Orders" />
+              <Item to="/reports" icon={BarChart} label="Reports" />
+
+              <Item to="/customers" icon={Users} label="Customers" />
+
+              {/* <Item to="/orders" icon={Package} label="Orders" /> */}
+              <Item to="/users" icon={Users} label="Users" />
+
+              <Item
+                to="/staff-attendance"
+                icon={Users}
+                label="Staff Attendance"
+              />
+              <Item to="/settings/profile" icon={Settings} label="Settings" />
+            </>
+          ) : (
+            <>
+              <Item to="/dashboard" icon={Home} label="Dashboard" />
+              <Item to="/products" icon={Box} label="Products" />
+              <Item to="/categories" icon={Tag} label="Category" />
+              {/* <Item to="/online-orders" icon={Package} label="Online Orders" /> */}
+              <Item to="/reports" icon={BarChart} label="Reports" />
+
+              <Item to="/orders" icon={Package} label="Orders" />
+              <Item to="/users" icon={Users} label="Users" />
+
+              <Item
+                to="/staff-attendance"
+                icon={Users}
+                label="Staff Attendance"
+              />
+              <Item to="/settings/profile" icon={Settings} label="Settings" />
+            </>
+          )}
+
+          {/* <Item to="/dashboard" icon={Home} label="Dashboard" />
+          <Item to="/products" icon={Box} label="Products" /> */}
+
+          {/* {Projectname === "Herbal" ? (
             <>
               <Item to="/add-categories" icon={Tag} label="Add Category" />
 
@@ -99,10 +143,12 @@ export default function Sidebar({ open, setOpen, logout }) {
               <Item to="/reports" icon={BarChart} label="Reports" />
               <Item to="/pos" icon={ShoppingCart} label="POS" />
               <Item to="/customers" icon={Users} label="Customers" />
+
+              <Item to="/calling/orders" icon={Users} label="Calling Orders" />
             </>
           ) : (
             <Item to="/categories" icon={Tag} label="Category" />
-          )}
+          )} */}
 
           {/* <Item to="/brands" icon={Store} label="Brand" /> */}
           {/* {showBrandName && (
@@ -110,14 +156,14 @@ export default function Sidebar({ open, setOpen, logout }) {
 )} */}
           {/* {showBrandName && <Item to="/pos" icon={ShoppingCart} label="POS" />}
           <Item to="/expenses" icon={DollarSign} label="Expenses" /> */}
-          <Item to="/orders" icon={Package} label="Orders" />
+          {/* <Item to="/orders" icon={Package} label="Orders" /> */}
           {/* <Item to="/online-orders" icon={Package} label="Online Orders" /> */}
           {/* <Item to="/reports" icon={BarChart} label="Reports" /> */}
-          <Item to="/users" icon={Users} label="Users" />
+          {/* <Item to="/users" icon={Users} label="Users" /> */}
           {/* <Item to="/my-staff" icon={Users} label="My Staff" /> */}
           {/* <Item to="/add-staff" icon={Users} label="Add Staff" /> */}
-          <Item to="/staff-attendance" icon={Users} label="Staff Attendance" />
-          <Item to="/settings/profile" icon={Settings} label="Settings" />
+          {/* <Item to="/staff-attendance" icon={Users} label="Staff Attendance" />
+          <Item to="/settings/profile" icon={Settings} label="Settings" /> */}
         </nav>
 
         {/* LOGOUT */}

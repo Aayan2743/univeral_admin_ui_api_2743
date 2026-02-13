@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
-
+import { useNavigate } from "react-router-dom";
 export default function CustomerManagement() {
+  const navigate = useNavigate(); //
   const [customers, setCustomers] = useState([]);
   const [meta, setMeta] = useState({});
   const [page, setPage] = useState(1);
@@ -18,7 +19,9 @@ export default function CustomerManagement() {
   const fetchCustomers = async (pageNo = 1) => {
     setLoading(true);
     try {
-      const res = await api.get(`/admin-dashboard/user-details?page=${pageNo}`);
+      const res = await api.get(
+        `/admin-dashboard/user-order-details?page=${pageNo}`,
+      );
       setCustomers(res.data.data);
       setMeta(res.data.meta);
     } catch (error) {
@@ -101,25 +104,35 @@ Jane Smith,9123456789"
                 <th className="px-4 py-3 text-left">#</th>
                 <th className="px-4 py-3 text-left">Name</th>
                 <th className="px-4 py-3 text-left">Phone</th>
+                <th className="px-4 py-3 text-left">Total Orders</th>
+                <th className="px-4 py-3 text-left">Total Amount</th>
               </tr>
             </thead>
 
             <tbody>
-              {customers.length === 0 && (
-                <tr>
-                  <td colSpan="3" className="p-6 text-center text-gray-400">
-                    No customers found
-                  </td>
-                </tr>
-              )}
-
               {customers.map((c, i) => (
-                <tr key={c.id} className="border-t hover:bg-gray-50">
+                <tr
+                  key={c.id}
+                  className="border-t hover:bg-gray-50 cursor-pointer"
+                  onClick={() => navigate(`/customers/${c.id}/orders`)}
+                >
                   <td className="px-4 py-3">
                     {(meta.current_page - 1) * meta.per_page + i + 1}
                   </td>
+
                   <td className="px-4 py-3 font-medium">{c.name}</td>
+
                   <td className="px-4 py-3">{c.phone}</td>
+
+                  <td className="px-4 py-3">
+                    <span className="bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full text-xs font-semibold">
+                      {c.sales_count}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-3 font-semibold">
+                    ₹ {c.sales_sum_grand_total ?? 0}
+                  </td>
                 </tr>
               ))}
             </tbody>

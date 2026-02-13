@@ -508,6 +508,10 @@ export default function CartPanel({ cart = [], setCart }) {
 
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
+  const [pendingId, setPendingId] = useState(null);
+
+  const [showPaymentDone, setShowPaymentDone] = useState(false);
+
   /* ================= OTP STATES ================= */
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otp, setOtp] = useState("");
@@ -592,17 +596,6 @@ export default function CartPanel({ cart = [], setCart }) {
       addressData = newAddress;
     }
 
-    // if (
-    //   !addressData ||
-    //   !addressData.address ||
-    //   !addressData.city ||
-    //   !addressData.state ||
-    //   !addressData.pincode
-    // ) {
-    //   alert("Please provide complete address");
-    //   return;
-    // }
-
     if (
       !addressData ||
       !(addressData.address_line || addressData.address) ||
@@ -613,32 +606,6 @@ export default function CartPanel({ cart = [], setCart }) {
       alert("Please provide complete address");
       return;
     }
-
-    // const payload = {
-    //   customer_id: selectedCustomer?.id || null,
-    //   address_id: selectedAddress || null,
-    //   new_address: showNewAddress ? newAddress : null,
-
-    //   payment_method: paymentMode,
-    //   paid_amount: Number(total.toFixed(2)),
-
-    //   customer_name: customer.name,
-    //   customer_phone: customer.phone,
-
-    //   address_snapshot: {
-    //     address: addressData.address,
-    //     city: addressData.city,
-    //     state: addressData.state,
-    //     country: addressData.country || "India",
-    //     pincode: addressData.pincode,
-    //   },
-
-    //   items: cart.map((item) => ({
-    //     product_id: item.product_id,
-    //     variant_id: item.variation_id,
-    //     qty: item.qty,
-    //   })),
-    // };
 
     const payload = {
       customer_id: selectedCustomer?.id || null,
@@ -672,22 +639,61 @@ export default function CartPanel({ cart = [], setCart }) {
       })),
     };
 
+    // try {
+    //   setLoading(true);
+
+    //   // STEP 1 → SEND OTP
+    //   const otpRes = await api.post("/admin-dashboard/send-order-otp", payload);
+
+    //   if (otpRes.data.success) {
+    //     setPendingPayload(payload);
+    //     setPendingId(otpRes.data.pending_id); // 🔥 VERY IMPORTANT
+    //     setShowOtpModal(true);
+    //     alert("OTP sent to WhatsApp");
+    //   } else {
+    //     alert(otpRes.data.message);
+    //   }
+    // } catch (err) {
+    //   console.log("ERROR FULL:", err);
+    //   console.log("STATUS:", err.response?.status);
+    //   console.log("DATA:", err.response?.data);
+
+    //   alert(err.response?.data?.message || "Failed to send OTP");
+    // } finally {
+    //   setLoading(false);
+    // }
+
     try {
       setLoading(true);
 
-      // STEP 1 → SEND OTP
+      console.log("SENDING OTP...");
+
       const otpRes = await api.post("/admin-dashboard/send-order-otp", payload);
 
-      if (otpRes.data.success) {
-        setPendingPayload(payload);
-        setPendingId(otpRes.data.pending_id); // 🔥 VERY IMPORTANT
-        setShowOtpModal(true);
+      console.log("FULL RESPONSE:", otpRes);
+
+      if (otpRes?.data?.success === true) {
+        console.log("OTP SUCCESS BLOCK");
+
+        if (typeof setPendingPayload === "function") {
+          setPendingPayload(payload);
+        }
+
+        if (typeof setPendingId === "function") {
+          setPendingId(otpRes.data.pending_id);
+        }
+
+        if (typeof setShowOtpModal === "function") {
+          setShowOtpModal(true);
+        }
+
         alert("OTP sent to WhatsApp");
       } else {
-        alert(otpRes.data.message);
+        alert(otpRes?.data?.message || "Unexpected response");
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to send OTP");
+      console.log("🔥 ACTUAL ERROR:", err);
+      alert("Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -706,23 +712,44 @@ export default function CartPanel({ cart = [], setCart }) {
         otp,
         pending_id: pendingId,
       });
-
+      console.log(verifyRes.data.success);
       if (verifyRes.data.success) {
         // STEP 2 → AFTER VERIFY CREATE ORDER
-        const orderRes = await api.post(
-          "/admin-dashboard/pos/create-order",
-          pendingPayload,
+
+        console.log("Name:", customer.name);
+        console.log("Phone:", customer.phone);
+        console.log("amount", total);
+        const paymentRes = await api.post(
+          "/admin-dashboard/create-payment-link",
+          {
+            amount: total,
+            name: customer.name,
+            phone: customer.phone,
+          },
         );
 
-        if (orderRes.data.success) {
-          alert(`Order Created: ${orderRes.data.data.invoice_number}`);
-          setCart([]);
-          setShowOtpModal(false);
-          setOtp("");
-          setPendingPayload(null);
-        } else {
-          alert(orderRes.data.message);
+        if (paymentRes.data.success) {
+          alert("Payment link sent to customer phone");
+
+          setShowPaymentDone(true);
+
+          console.log("Payment Link:", paymentRes.data.payment_link);
         }
+
+        // const orderRes = await api.post(
+        //   "/admin-dashboard/pos/create-order",
+        //   pendingPayload,
+        // );
+
+        // if (orderRes.data.success) {
+        //   alert(`Order Created: ${orderRes.data.data.invoice_number}`);
+        //   setCart([]);
+        //   setShowOtpModal(false);
+        //   setOtp("");
+        //   setPendingPayload(null);
+        // } else {
+        //   alert(orderRes.data.message);
+        // }
       } else {
         alert(verifyRes.data.message);
       }
@@ -755,6 +782,34 @@ export default function CartPanel({ cart = [], setCart }) {
       }
     } catch (err) {
       console.error("Pin API failed", err);
+    }
+  };
+
+  const handleManualPaymentSuccess = async () => {
+    try {
+      setLoading(true);
+
+      const orderRes = await api.post(
+        "/admin-dashboard/pos/create-order",
+        pendingPayload,
+      );
+
+      if (orderRes.data.success) {
+        alert(`Order Created: ${orderRes.data.data.invoice_number}`);
+
+        setCart([]);
+        setShowOtpModal(false);
+        setOtp("");
+        setPendingPayload(null);
+        setShowPaymentDone(false);
+      } else {
+        alert(orderRes.data.message);
+      }
+    } catch (err) {
+      console.log(err.response?.data);
+      alert("Order creation failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1109,6 +1164,24 @@ export default function CartPanel({ cart = [], setCart }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* manulay confirmation */}
+      {showPaymentDone && (
+        <button
+          onClick={handleManualPaymentSuccess}
+          style={{
+            backgroundColor: "green",
+            color: "white",
+            padding: "10px 20px",
+            marginTop: "10px",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Payment Done (Test)
+        </button>
       )}
     </div>
   );
