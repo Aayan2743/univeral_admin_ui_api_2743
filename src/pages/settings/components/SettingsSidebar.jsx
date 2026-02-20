@@ -11,6 +11,7 @@ const menu = [
   { label: "Customer Care Settings", path: "/settings/customer-care-settings" },
   // { label: "account-settings", path: "/settings/account-settings" },
   { label: "coupons-settings", path: "/settings/coupons-settings" },
+  { label: "Banner-settings", path: "/settings/banner-settings" },
   // { label: "Settings", path: "" },
   // ContactSettings
 ];

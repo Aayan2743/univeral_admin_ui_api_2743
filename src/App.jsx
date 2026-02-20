@@ -79,6 +79,7 @@ import ManualOrderDetails from "./pages/ManualOrderDetails";
 import ManualOrders from "./pages/ManualOrders";
 import CustomerOrders from "./pages/CustomerOrders";
 import PermissionManagement from "./pages/PermissionManagement";
+import BannerSettings from "./pages/settings/components/BannerSettings";
 
 export default function App() {
   return (
@@ -135,7 +136,6 @@ export default function App() {
 
               {isHerbal && (
                 <>
-                  
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/products" element={<Products />} />
                   <Route path="/add-categories" element={<AddCategory />} />
@@ -185,6 +185,11 @@ export default function App() {
                       path="coupons-settings"
                       element={<CouponSettings />}
                     />
+
+                    <Route
+                      path="banner-settings"
+                      element={<BannerSettings />}
+                    />
                   </Route>
 
                   <Route path="/online-orders" element={<OrdersPage />} />
@@ -229,6 +234,11 @@ export default function App() {
                     <Route
                       path="coupons-settings"
                       element={<CouponSettings />}
+                    />
+
+                    <Route
+                      path="banner-settings"
+                    element={<BannerSettings />}
                     />
                   </Route>
                 </>
