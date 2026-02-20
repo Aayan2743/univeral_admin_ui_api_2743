@@ -25,11 +25,29 @@ export default function BannerSettings() {
   const [form, setForm] = useState(emptyBanner);
 
   /* ================= FETCH BANNERS ================= */
-  const fetchBanners = async () => {
+  const fetchBanners123 = async () => {
     setLoading(true);
     try {
       const res = await api.get("/admin-dashboard/banners");
       setBanners(res.data.data.data || []);
+    } catch (err) {
+      toast.error("Failed to fetch banners");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBanners = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/admin-dashboard/banners");
+
+      const formatted = (res.data.data.data || []).map((b) => ({
+        ...b,
+        status: b.status == 1 || b.status === "1" || b.status === true,
+      }));
+
+      setBanners(formatted);
     } catch (err) {
       toast.error("Failed to fetch banners");
     } finally {
