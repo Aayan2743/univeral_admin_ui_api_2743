@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
@@ -6,15 +7,13 @@ export default function ManualOrders() {
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [loading, setLoading] = useState(false);
 
   const [showCourierModal, setShowCourierModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [couriers, setCouriers] = useState([]);
-  const [selectedCourier, setSelectedCourier] = useState("");
 
   const [dimensions, setDimensions] = useState({
     length: "",
@@ -39,59 +38,19 @@ export default function ManualOrders() {
         setOrders(res.data.data.data);
         setLastPage(res.data.data.last_page);
       }
-    } catch {
+    } catch (err) {
       alert("Failed to fetch orders");
     } finally {
       setLoading(false);
     }
   };
 
-  const openCourierModal = async (order) => {
-    setSelectedOrder(order);
-    setShowCourierModal(true);
-
-    try {
-      const res = await api.get("/admin-dashboard/enabled-couriers");
-
-      if (res.data.success) {
-        setCouriers(res.data.data);
-      }
-    } catch {
-      alert("Failed to load couriers");
-    }
-  };
-
-  const submitCourier = async () => {
-    if (!selectedCourier) {
-      alert("Please select courier");
-      return;
-    }
-
-    try {
-      const res = await api.post(
-        `/admin-dashboard/send-courier/${selectedOrder.id}`,
-        {
-          courier: selectedCourier,
-          ...dimensions,
-        },
-      );
-
-      if (res.data.success) {
-        alert("Sent to courier successfully");
-        setShowCourierModal(false);
-        fetchOrders();
-      }
-    } catch {
-      alert("Courier failed");
-    }
-  };
-
   const getStatusBadge = (status) => {
     const styles = {
-      created: "bg-yellow-100 text-yellow-600",
-      shipped: "bg-blue-100 text-blue-600",
       completed: "bg-green-100 text-green-600",
       cancelled: "bg-red-100 text-red-600",
+      created: "bg-yellow-100 text-yellow-600",
+      shipped: "bg-blue-100 text-blue-600",
     };
 
     return (
@@ -105,21 +64,49 @@ export default function ManualOrders() {
     );
   };
 
+  const handleAction = (action, order) => {
+    if (action === "courier") {
+      setSelectedOrder(order);
+      setShowCourierModal(true);
+    }
+  };
+
+  const submitCourier = async () => {
+    try {
+      const res = await api.post(
+        `/admin-dashboard/send-courier/${selectedOrder.id}`,
+        dimensions,
+      );
+
+      if (res.data.success) {
+        alert("Sent to courier");
+        setShowCourierModal(false);
+        fetchOrders();
+      }
+    } catch {
+      alert("Courier failed");
+    }
+  };
+
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Manual Orders</h2>
 
-      <input
-        type="text"
-        placeholder="Search invoice, name, phone..."
-        className="border p-2 rounded w-1/3 mb-4"
-        value={search}
-        onChange={(e) => {
-          setPage(1);
-          setSearch(e.target.value);
-        }}
-      />
+      {/* 🔍 Search */}
+      <div className="flex justify-between mb-4">
+        <input
+          type="text"
+          placeholder="Search invoice, name, phone..."
+          className="border p-2 rounded w-1/3"
+          value={search}
+          onChange={(e) => {
+            setPage(1);
+            setSearch(e.target.value);
+          }}
+        />
+      </div>
 
+      {/* 📋 Table */}
       <div className="bg-white shadow rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-100 text-left">
@@ -135,11 +122,15 @@ export default function ManualOrders() {
           </thead>
           <tbody>
             {orders.map((order) => (
-              <tr key={order.id} className="border-t">
-                <td className="p-3">{order.invoice_number}</td>
-                <td className="p-3">{order.customer_name}</td>
-                <td className="p-3">{order.customer_phone}</td>
-                <td className="p-3">₹ {order.grand_total}</td>
+              <tr key={order.id} className="border-t hover:bg-gray-50">
+                <td className="p-3 font-medium">{order.invoice_number}</td>
+                <td className="p-3">
+                  {order.customer?.name || order.customer_name}
+                </td>
+                <td className="p-3">
+                  {order.customer?.phone || order.customer_phone}
+                </td>
+                <td className="p-3 font-semibold">₹ {order.grand_total}</td>
                 <td className="p-3">{getStatusBadge(order.status)}</td>
                 <td className="p-3">
                   {new Date(order.created_at).toLocaleDateString()}
@@ -154,7 +145,7 @@ export default function ManualOrders() {
 
                   {order.status === "created" && (
                     <button
-                      onClick={() => openCourierModal(order)}
+                      onClick={() => handleAction("courier", order)}
                       className="px-3 py-1 bg-blue-500 text-white rounded"
                     >
                       Courier
@@ -167,26 +158,34 @@ export default function ManualOrders() {
         </table>
       </div>
 
-      {/* Modal */}
+      {/* 📄 Pagination */}
+      <div className="flex justify-center gap-2 mt-4">
+        <button
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+          className="px-3 py-1 border rounded"
+        >
+          Prev
+        </button>
+
+        <span className="px-4 py-1">
+          {page} / {lastPage}
+        </span>
+
+        <button
+          disabled={page === lastPage}
+          onClick={() => setPage(page + 1)}
+          className="px-3 py-1 border rounded"
+        >
+          Next
+        </button>
+      </div>
+
+      {/* 🚚 Courier Modal */}
       {showCourierModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
           <div className="bg-white p-6 rounded shadow w-96">
-            <h3 className="text-lg font-semibold mb-4">
-              Select Courier & Dimensions
-            </h3>
-
-            <select
-              className="border p-2 rounded w-full mb-3"
-              value={selectedCourier}
-              onChange={(e) => setSelectedCourier(e.target.value)}
-            >
-              <option value="">Select Courier</option>
-              {couriers.map((courier) => (
-                <option key={courier.code} value={courier.code}>
-                  {courier.name}
-                </option>
-              ))}
-            </select>
+            <h3 className="text-lg font-semibold mb-4">Package Dimensions</h3>
 
             {["length", "breadth", "height", "weight"].map((field) => (
               <input
@@ -211,7 +210,6 @@ export default function ManualOrders() {
               >
                 Cancel
               </button>
-
               <button
                 onClick={submitCourier}
                 className="px-3 py-1 bg-blue-600 text-white rounded"

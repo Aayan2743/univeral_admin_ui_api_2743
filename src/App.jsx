@@ -80,6 +80,7 @@ import ManualOrders from "./pages/ManualOrders";
 import CustomerOrders from "./pages/CustomerOrders";
 import PermissionManagement from "./pages/PermissionManagement";
 import BannerSettings from "./pages/settings/components/BannerSettings";
+import ShippingSettings from "./pages/settings/components/ShippingSettings";
 
 export default function App() {
   return (
@@ -173,6 +174,12 @@ export default function App() {
                       path="payment-gateway"
                       element={<PaymentGatewaySettings />}
                     />
+
+                    <Route
+                      path="shipping-settings"
+                      element={<ShippingSettings />}
+                    />
+
                     <Route
                       path="variation-settings"
                       element={<VariationSettings />}
@@ -238,7 +245,7 @@ export default function App() {
 
                     <Route
                       path="banner-settings"
-                    element={<BannerSettings />}
+                      element={<BannerSettings />}
                     />
                   </Route>
                 </>

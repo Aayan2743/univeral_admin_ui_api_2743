@@ -111,6 +111,11 @@ export default function Sidebar({ open, setOpen, logout }) {
                 label="Staff Attendance"
               />
               <Item to="/settings/profile" icon={Settings} label="Settings" />
+              <Item
+                to="/settings/shipping-settings"
+                icon={Settings}
+                label="Settings"
+              />
             </>
           ) : (
             <>

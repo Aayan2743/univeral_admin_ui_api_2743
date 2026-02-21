@@ -39,9 +39,7 @@ const StepTax = forwardRef(({ productId }, ref) => {
     <div className="bg-white border rounded-xl shadow-sm p-6 space-y-6">
       {/* HEADER */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800">
-          Tax & Affinity dfdfdfddf
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-800">Tax & Affinity</h3>
         <p className="text-sm text-gray-500">
           Configure GST and affinity commission settings
         </p>
@@ -51,7 +49,7 @@ const StepTax = forwardRef(({ productId }, ref) => {
       <div className="rounded-lg border p-4 space-y-4">
         <label className="flex items-center justify-between">
           <div>
-            <p className="font-medium text-gray-800">Enable GST dfdfdf</p>
+            <p className="font-medium text-gray-800">Enable GST </p>
             <p className="text-sm text-gray-500">Apply tax on this product</p>
           </div>
 

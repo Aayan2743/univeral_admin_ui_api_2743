@@ -12,6 +12,7 @@ const menu = [
   // { label: "account-settings", path: "/settings/account-settings" },
   { label: "coupons-settings", path: "/settings/coupons-settings" },
   { label: "Banner-settings", path: "/settings/banner-settings" },
+  { label: "Shipping-settings", path: "/settings/shipping-settings" },
   // { label: "Settings", path: "" },
   // ContactSettings
 ];
