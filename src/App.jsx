@@ -81,6 +81,9 @@ import CustomerOrders from "./pages/CustomerOrders";
 import PermissionManagement from "./pages/PermissionManagement";
 import BannerSettings from "./pages/settings/components/BannerSettings";
 import ShippingSettings from "./pages/settings/components/ShippingSettings";
+import BannerAdmin from "./pages/settings/components/BannerAdmin";
+import EditProductSections from "./pages/settings/components/EditProductSections";
+import SectionManager from "./pages/SectionManager";
 
 export default function App() {
   return (
@@ -158,6 +161,11 @@ export default function App() {
                     element={<StaffAttendanceCalendar />}
                   />
 
+                  {/* <Route
+                    path="/product-sections"
+                    element={<SectionManager />}
+                  /> */}
+
                   <Route path="/settings" element={<SettingsPage />}>
                     <Route path="profile" element={<ProfileSettings />} />
                     <Route path="logo" element={<LogoSettings />} />
@@ -197,6 +205,11 @@ export default function App() {
                       path="banner-settings"
                       element={<BannerSettings />}
                     />
+
+                    <Route
+                      path="product-sections"
+                      element={<SectionManager />}
+                    />
                   </Route>
 
                   <Route path="/online-orders" element={<OrdersPage />} />
@@ -213,6 +226,11 @@ export default function App() {
                     path="/staff-attendance"
                     element={<StaffAttendanceCalendar />}
                   />
+
+                  {/* <Route
+                    path="/product-sections"
+                    element={<SectionManager />}
+                  /> */}
 
                   <Route path="/settings" element={<SettingsPage />}>
                     <Route path="profile" element={<ProfileSettings />} />
@@ -246,6 +264,15 @@ export default function App() {
                     <Route
                       path="banner-settings"
                       element={<BannerSettings />}
+                    />
+                    <Route
+                      path="landing-banner-settings"
+                      element={<BannerAdmin />}
+                    />
+
+                    <Route
+                      path="product-sections"
+                      element={<SectionManager />}
                     />
                   </Route>
                 </>

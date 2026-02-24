@@ -12,7 +12,12 @@ const menu = [
   // { label: "account-settings", path: "/settings/account-settings" },
   { label: "coupons-settings", path: "/settings/coupons-settings" },
   { label: "Banner-settings", path: "/settings/banner-settings" },
+  {
+    label: "Landing Banner Settings",
+    path: "/settings/landing-banner-settings",
+  },
   { label: "Shipping-settings", path: "/settings/shipping-settings" },
+  { label: "Product Sections", path: "/settings/product-sections" },
   // { label: "Settings", path: "" },
   // ContactSettings
 ];

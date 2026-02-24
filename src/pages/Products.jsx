@@ -5,6 +5,7 @@ import EditProductDrawer from "./components/EditProductDrawer";
 import StatusBadge from "./components/StatusBadge";
 
 import useDynamicTitle from "../hooks/useDynamicTitle";
+import ProductSectionAssign from "./settings/components/ProductSectionAssign";
 
 export default function Products() {
   useDynamicTitle("Products");
@@ -12,6 +13,12 @@ export default function Products() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+
+  const [openSections, setOpenSections] = useState(false);
+  const [selectedSectionProductId, setSelectedSectionProductId] =
+    useState(null);
+
+  const [selectedSectionProduct, setSelectedSectionProduct] = useState(null);
 
   const [products, setProducts] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -114,6 +121,7 @@ export default function Products() {
 
               <th className="px-4 py-3 text-left">Price</th>
               <th className="px-4 py-3 text-left">Status</th>
+              <th className="px-4 py-3 text-left">Sections</th>
               <th className="px-4 py-3 text-left">Action</th>
             </tr>
           </thead>
@@ -175,6 +183,23 @@ export default function Products() {
                   </td>
 
                   <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-2">
+                      {p.sections && p.sections.length > 0 ? (
+                        p.sections.map((section) => (
+                          <span
+                            key={section.id}
+                            className="px-3 py-1 text-xs rounded-full bg-indigo-100 text-indigo-700 font-medium"
+                          >
+                            {section.name}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-400 text-xs">—</span>
+                      )}
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {/* EDIT */}
                       <button
@@ -186,6 +211,18 @@ export default function Products() {
                         className="text-indigo-600 hover:underline"
                       >
                         Edit
+                      </button>
+
+                      {/* SECTION BUTTON */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSectionProduct(p);
+                          setOpenSections(true);
+                        }}
+                        className="text-purple-600 hover:underline"
+                      >
+                        Sections
                       </button>
 
                       {/* DELETE */}
@@ -207,6 +244,38 @@ export default function Products() {
                   No products found
                 </td>
               </tr>
+            )}
+
+            {openSections && (
+              <>
+                {/* Overlay */}
+                <div
+                  className="fixed inset-0 bg-black/40 z-40"
+                  onClick={() => setOpenSections(false)}
+                />
+
+                {/* Drawer */}
+                <div className="fixed right-0 top-0 h-full w-[450px] bg-white shadow-2xl z-50 p-6 overflow-y-auto transition-all duration-300">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-semibold">Assign Sections</h2>
+
+                    <button
+                      onClick={() => setOpenSections(false)}
+                      className="text-gray-500 hover:text-gray-800"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <ProductSectionAssign
+                    product={selectedSectionProduct}
+                    onSaved={() => {
+                      fetchProducts();
+                      setOpenSections(false);
+                    }}
+                  />
+                </div>
+              </>
             )}
           </tbody>
         </table>

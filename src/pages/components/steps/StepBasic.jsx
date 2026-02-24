@@ -45,9 +45,17 @@ export default function StepBasic({ setStep, setProductId }) {
     fetchData();
   }, []);
 
-  const mainCategories = categories.filter((c) => c.parent_id === null);
+  // const mainCategories = categories.filter((c) => c.parent_id === null);
+
+  const mainCategories = categories.filter(
+    (c) => c.parent_id === null || c.parent_id === 0,
+  );
+  // const subCategories = categories.filter(
+  //   (c) => c.parent_id === form.category_id,
+  // );
+
   const subCategories = categories.filter(
-    (c) => c.parent_id === form.category_id,
+    (c) => String(c.parent_id) === String(form.category_id),
   );
 
   /* ================= HANDLERS ================= */
