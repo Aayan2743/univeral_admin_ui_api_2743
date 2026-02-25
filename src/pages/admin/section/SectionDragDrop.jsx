@@ -2,17 +2,36 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useEffect, useState } from "react";
 import api from "../../../api/axios";
 import SettingsLayout from "../../settings/SettingsLayout";
+import { toast } from "react-hot-toast";
 
 
 const SectionDragDrop = () => {
   const [sections, setSections] = useState([]);
 
-  useEffect(() => {
-    api.get("/admin-dashboard/get-footer-sections?per_page=100")
-      .then(res => setSections(res.data));
-  }, []);
+  // useEffect(() => {
+  //   api.get("/admin-dashboard/get-footer-sections?per_page=100")
+  //     .then(res => setSections(res.data));
+  // }, []);
 
-  const onDragEnd = (result) => {
+
+  useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const res = await api.get(
+        "/admin-dashboard/get-footer-sections?per_page=100"
+      );
+      setSections(res.data);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to load sections"
+      );
+    }
+  };
+
+  fetchData();
+}, []);
+
+  const onDragEnds = (result) => {
     if (!result.destination) return;
 
     const reordered = Array.from(sections);
@@ -28,6 +47,38 @@ const SectionDragDrop = () => {
 
     api.post("/admin-dashboard/reordering-footer-sections", payload);
   };
+
+  const onDragEnd = async (result) => {
+  if (!result.destination) return;
+
+  const reordered = Array.from(sections);
+  const [removed] = reordered.splice(result.source.index, 1);
+  reordered.splice(result.destination.index, 0, removed);
+
+  setSections(reordered);
+
+  const payload = reordered.map((item, index) => ({
+    id: item.id,
+    order_by: index + 1
+  }));
+
+  try {
+    const response = await api.post(
+      "/admin-dashboard/reordering-footer-sections",
+      payload
+    );
+
+    toast.success(
+      response?.data?.message || "Sections reordered successfully"
+    );
+
+  } catch (error) {
+
+    toast.error(
+      error.response?.data?.message || "Reordering failed"
+    );
+  }
+};
 
   return (
   <SettingsLayout>

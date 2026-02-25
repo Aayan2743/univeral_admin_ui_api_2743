@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../../api/axios";
 import Pagination from "../../components/Pagination";
 import SettingsLayout from "../../settings/SettingsLayout";
+import { toast } from "react-hot-toast";
 
 const CategoryList = () => {
 
@@ -17,14 +18,24 @@ const CategoryList = () => {
 
   /* ================= FETCH ================= */
 
-  const fetchCategories = (page = 1) => {
-    api.get(`/admin-dashboard/blog-categories?page=${page}`)
-      .then(res => {
-        const paginationData = res.data.data;
-        setCategories(paginationData.data);
-        setPagination(paginationData);
-      });
-  };
+const fetchCategories = async (page = 1) => {
+  try {
+    const res = await api.get(
+      `/admin-dashboard/blog-categories?page=${page}`
+    );
+
+    const paginationData = res.data.data;
+
+    setCategories(paginationData.data);
+    setPagination(paginationData);
+
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message ||
+      "Failed to load categories"
+    );
+  }
+};
 
   useEffect(() => {
     fetchCategories();
@@ -32,21 +43,53 @@ const CategoryList = () => {
 
   /* ================= DELETE ================= */
 
-  const deleteCategory = (id) => {
-    if (!window.confirm("Delete this category?")) return;
+const deleteCategory = async (id) => {
+  if (!window.confirm("Delete this category?")) return;
 
-    api.delete(`/admin-dashboard/blog-categories/${id}`)
-      .then(() => fetchCategories());
-  };
+  try {
+    const res = await api.delete(
+      `/admin-dashboard/blog-categories/${id}`
+    );
+
+    toast.success(
+      res?.data?.message || "Category deleted"
+    );
+
+    fetchCategories();
+
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message ||
+      "Delete failed"
+    );
+  }
+};
 
   /* ================= STATUS TOGGLE ================= */
 
-  const toggleStatus = (category) => {
-    api.put(`/admin-dashboard/blog-categories/${category.id}`, {
-      name: category.name,
-      status: category.status ? 0 : 1
-    }).then(() => fetchCategories());
-  };
+const toggleStatus = async (category) => {
+  try {
+    const res = await api.put(
+      `/admin-dashboard/blog-categories/${category.id}`,
+      {
+        name: category.name,
+        status: category.status ? 0 : 1
+      }
+    );
+
+    toast.success(
+      res?.data?.message || "Status updated"
+    );
+
+    fetchCategories();
+
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message ||
+      "Status update failed"
+    );
+  }
+};
 
   /* ================= OPEN DRAWER ================= */
 
@@ -69,25 +112,47 @@ const CategoryList = () => {
 
   /* ================= SAVE ================= */
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+
+    let response;
 
     if (editingCategory) {
-      api.put(
+      response = await api.put(
         `/admin-dashboard/blog-categories/${editingCategory.id}`,
         formData
-      ).then(() => {
-        fetchCategories();
-        setIsDrawerOpen(false);
-      });
+      );
     } else {
-      api.post(`/admin-dashboard/blog-categories`, formData)
-        .then(() => {
-          fetchCategories();
-          setIsDrawerOpen(false);
-        });
+      response = await api.post(
+        `/admin-dashboard/blog-categories`,
+        formData
+      );
     }
-  };
+
+    toast.success(
+      response?.data?.message ||
+      (editingCategory
+        ? "Category updated"
+        : "Category created")
+    );
+
+    fetchCategories();
+    setIsDrawerOpen(false);
+
+  } catch (error) {
+
+    if (error.response?.status === 422) {
+      toast.error(error.response.data.message);
+    } else {
+      toast.error(
+        error.response?.data?.message ||
+        "Something went wrong"
+      );
+    }
+  }
+};
 
   return (
     <SettingsLayout>

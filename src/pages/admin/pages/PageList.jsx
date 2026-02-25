@@ -3,6 +3,7 @@ import api from "../../../api/axios";
 import Pagination from "../../components/Pagination";
 import SettingsLayout from "../../settings/SettingsLayout";
 import RichTextEditorNew from "../../components/RichTextEditorNew";
+import { toast } from "react-hot-toast";
 
 const PageList = () => {
 
@@ -24,13 +25,17 @@ const PageList = () => {
 
   /* ================= FETCH PAGES ================= */
 
-  const fetchPages = (page = 1) => {
-    api.get(`/admin-dashboard/get-pages?page=${page}`)
-      .then(res => {
-        setPages(res.data.data.data);
-        setPagination(res.data.data);
-      });
-  };
+const fetchPages = async (page = 1) => {
+  try {
+    const res = await api.get(`/admin-dashboard/get-pages?page=${page}`);
+    setPages(res.data.data.data);
+    setPagination(res.data.data);
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Failed to load pages"
+    );
+  }
+};
 
   /* ================= FETCH SECTIONS ================= */
 
@@ -48,12 +53,22 @@ const PageList = () => {
 
   /* ================= DELETE ================= */
 
-  const deletePage = (id) => {
-    if (!window.confirm("Delete this page?")) return;
+const deletePage = async (id) => {
+  if (!window.confirm("Delete this page?")) return;
 
-    api.delete(`/admin-dashboard/delete-pages/${id}`)
-      .then(() => fetchPages());
-  };
+  try {
+    const res = await api.delete(
+      `/admin-dashboard/delete-pages/${id}`
+    );
+
+    toast.success(res?.data?.message || "Page deleted successfully");
+    fetchPages();
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Delete failed"
+    );
+  }
+}
 
   /* ================= OPEN DRAWER ================= */
 
@@ -84,23 +99,43 @@ const PageList = () => {
 
   /* ================= SUBMIT ================= */
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    let response;
 
     if (editingPage) {
-      api.put(`/admin-dashboard/update-pages/${editingPage.id}`, formData)
-        .then(() => {
-          fetchPages();
-          setDrawerOpen(false);
-        });
+      response = await api.put(
+        `/admin-dashboard/update-pages/${editingPage.id}`,
+        formData
+      );
     } else {
-      api.post(`/admin-dashboard/add-pages`, formData)
-        .then(() => {
-          fetchPages();
-          setDrawerOpen(false);
-        });
+      response = await api.post(
+        `/admin-dashboard/add-pages`,
+        formData
+      );
     }
-  };
+
+    toast.success(
+      response?.data?.message ||
+        (editingPage ? "Page updated" : "Page created")
+    );
+
+    fetchPages();
+    setDrawerOpen(false);
+
+  } catch (error) {
+
+    if (error.response?.status === 422) {
+      toast.error(error.response.data.message);
+    } else {
+      toast.error(
+        error.response?.data?.message || "Something went wrong"
+      );
+    }
+  }
+};
 
   return (
     <SettingsLayout>

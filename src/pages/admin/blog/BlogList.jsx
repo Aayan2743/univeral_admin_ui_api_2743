@@ -3,6 +3,7 @@ import api from "../../../api/axios";
 import Pagination from "../../components/Pagination";
 import SettingsLayout from "../../settings/SettingsLayout";
 import RichTextEditorNew from "../../components/RichTextEditorNew";
+import { toast } from "react-hot-toast";
 
 const BlogList = () => {
 
@@ -27,22 +28,30 @@ const BlogList = () => {
 
   /* ================= FETCH BLOGS ================= */
 
-  const fetchBlogs = (page = 1) => {
-    api.get(`/admin-dashboard/get-blogs?page=${page}`)
-      .then(res => {
-        setBlogs(res.data.data.data);
-        setPagination(res.data.data);
-      });
-  };
+const fetchBlogs = async (page = 1) => {
+  try {
+    const res = await api.get(`/admin-dashboard/get-blogs?page=${page}`);
+    setBlogs(res.data.data.data);
+    setPagination(res.data.data);
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Failed to load blogs"
+    );
+  }
+};
 
   /* ================= FETCH CATEGORIES ================= */
 
-  const fetchCategories = () => {
-    api.get(`/admin-dashboard/blog-categories-1`)
-      .then(res => {
-        setCategories(res.data.data);
-      });
-  };
+const fetchCategories = async () => {
+  try {
+    const res = await api.get(`/admin-dashboard/blog-categories-1`);
+    setCategories(res.data.data);
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Failed to load categories"
+    );
+  }
+};
 
   useEffect(() => {
     fetchBlogs();
@@ -51,12 +60,25 @@ const BlogList = () => {
 
   /* ================= DELETE ================= */
 
-  const deleteBlog = (id) => {
-    if (!window.confirm("Delete this blog?")) return;
+const deleteBlog = async (id) => {
+  if (!window.confirm("Delete this blog?")) return;
 
-    api.delete(`/admin-dashboard/delete-blogs/${id}`)
-      .then(() => fetchBlogs());
-  };
+  try {
+    const res = await api.delete(
+      `/admin-dashboard/delete-blogs/${id}`
+    );
+
+    toast.success(
+      res?.data?.message || "Blog deleted successfully"
+    );
+
+    fetchBlogs();
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Delete failed"
+    );
+  }
+};
 
   /* ================= TAG HANDLING ================= */
 
@@ -78,28 +100,49 @@ const BlogList = () => {
 
   /* ================= SUBMIT ================= */
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const payload = {
-      ...formData,
-      meta_keywords: metaTags.join(",")
-    };
+  const payload = {
+    ...formData,
+    meta_keywords: metaTags.join(",")
+  };
+
+  try {
+    let response;
 
     if (editingBlog) {
-      api.put(`/admin-dashboard/update-blogs/${editingBlog.id}`, payload)
-        .then(() => {
-          fetchBlogs();
-          setDrawerOpen(false);
-        });
+      response = await api.put(
+        `/admin-dashboard/update-blogs/${editingBlog.id}`,
+        payload
+      );
     } else {
-      api.post(`/admin-dashboard/add-blogs`, payload)
-        .then(() => {
-          fetchBlogs();
-          setDrawerOpen(false);
-        });
+      response = await api.post(
+        `/admin-dashboard/add-blogs`,
+        payload
+      );
     }
-  };
+
+    toast.success(
+      response?.data?.message ||
+      (editingBlog ? "Blog updated" : "Blog created")
+    );
+
+    fetchBlogs();
+    setDrawerOpen(false);
+
+  } catch (error) {
+
+    if (error.response?.status === 422) {
+      toast.error(error.response.data.message);
+    } else {
+      toast.error(
+        error.response?.data?.message ||
+        "Something went wrong"
+      );
+    }
+  }
+};
 
   /* ================= OPEN DRAWER ================= */
 
@@ -405,12 +448,12 @@ const BlogList = () => {
               Cancel
             </button>
 
-            <button
-              type="submit"
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg"
-            >
-              {editingBlog ? "Update Blog" : "Save Blog"}
-            </button>
+           <button
+  type="submit"
+  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+>
+  {editingBlog ? "Update Blog" : "Save Blog"}
+</button>
           </div>
 
         </form>

@@ -5,6 +5,7 @@ import Pagination from "../../components/Pagination";
 import SettingsLayout from "../../settings/SettingsLayout";
 // import Pagination from "../../../components/Pagination";
 // import SettingsLayout from "./settings/SettingsLayout";
+import { toast } from "react-hot-toast";
 
 const SectionList = () => {
   const [sections, setSections] = useState([]);
@@ -45,7 +46,7 @@ const [formData, setFormData] = useState({
   };
 
 
-  const handleSubmit = (e) => {
+  const handleSubmitss = (e) => {
   e.preventDefault();
 
   if (editingSection) {
@@ -60,6 +61,42 @@ const [formData, setFormData] = useState({
         fetchSections();
         setDrawerOpen(false);
       });
+  }
+};
+
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    let response;
+
+    if (editingSection) {
+      response = await api.post(
+        `/admin-dashboard/update-footer-sections/${editingSection.id}`,
+        formData
+      );
+    } else {
+      response = await api.post(
+        `/admin-dashboard/add-footer-sections`,
+        formData
+      );
+    }
+
+    toast.success(response?.data?.message || "Success");
+
+    fetchSections();
+    setDrawerOpen(false);
+
+  } catch (error) {
+
+    if (error.response?.status === 422) {
+      toast.error(error.response.data.message);
+    } else if (error.response?.data?.message) {
+      toast.error(error.response.data.message);
+    } else {
+      toast.error("Something went wrong");
+    }
   }
 };
 
