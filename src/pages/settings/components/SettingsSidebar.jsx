@@ -18,6 +18,11 @@ const menu = [
   },
   { label: "Shipping-settings", path: "/settings/shipping-settings" },
   { label: "Product Sections", path: "/settings/product-sections" },
+  { label: "Footer Sections", path: "/settings/footer-sections" },
+  { label: "Footer Sections Reorder", path: "/settings/footer-sections/reorder" },
+  { label: "Blog-categories", path: "/settings/blog-categories" },
+  { label: "Blog Settings", path: "/settings/blogs" },
+  { label: "Page Settings", path: "/settings/pages" },
   // { label: "Settings", path: "" },
   // ContactSettings
 ];

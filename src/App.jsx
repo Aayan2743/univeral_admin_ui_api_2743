@@ -84,6 +84,16 @@ import ShippingSettings from "./pages/settings/components/ShippingSettings";
 import BannerAdmin from "./pages/settings/components/BannerAdmin";
 import EditProductSections from "./pages/settings/components/EditProductSections";
 import SectionManager from "./pages/SectionManager";
+import SectionList from "./pages/admin/section/SectionList";
+import SectionForm from "./pages/admin/section/SectionForm";
+import SectionDragDrop from "./pages/admin/section/SectionDragDrop";
+import BlogForm from "./pages/admin/blog/BlogForm";
+import BlogDragDrop from "./pages/admin/blog/BlogDragDrop";
+import BlogList from "./pages/admin/blog/BlogList";
+import CategoryForm from "./pages/CategoryForm";
+import BlogCategoryForm from "./pages/admin/blog-category/CategoryForm";
+import CategoryList from "./pages/admin/blog-category/CategoryList";
+import PageList from "./pages/admin/pages/PageList";
 
 export default function App() {
   return (
@@ -227,6 +237,23 @@ export default function App() {
                     element={<StaffAttendanceCalendar />}
                   />
 
+                  {/* <Route path="/admin/sections" element={<SectionList />} />
+                <Route path="/admin/sections/create" element={<SectionForm />} />
+                <Route path="/admin/sections/edit/:id" element={<SectionForm />} />
+                <Route path="/admin/sections/reorder" element={<SectionDragDrop />} /> */}
+
+                    {/* <Route path="/admin/blog-categories" element={<CategoryList />} />
+                <Route path="/admin/blog-categories/create" element={<BlogCategoryForm />} />
+                <Route path="/admin/blog-categories/edit/:id" element={<BlogCategoryForm />} /> */}
+           
+
+
+
+                 {/* <Route path="/admin/blogs" element={<BlogList  />} />
+                <Route path="/admin/blog/create" element={<BlogForm />} />
+                <Route path="/admin/blog/edit/:id" element={<BlogForm />} />
+             */}
+
                   {/* <Route
                     path="/product-sections"
                     element={<SectionManager />}
@@ -274,6 +301,21 @@ export default function App() {
                       path="product-sections"
                       element={<SectionManager />}
                     />
+                    {/* Add in herbal also */}
+                  
+                      <Route path="footer-sections" element={<SectionList />} />
+                      <Route path="footer-sections/reorder" element={<SectionDragDrop />} />
+
+
+                      <Route path="blog-categories" element={<CategoryList />} />
+
+
+                      <Route path="blogs" element={<BlogList  />} />
+                      <Route path="pages" element={<PageList  />} />
+               
+
+
+                    
                   </Route>
                 </>
               )}
