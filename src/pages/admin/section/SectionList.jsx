@@ -132,18 +132,18 @@ const handleSubmit = async (e) => {
               <tr key={section.id} className="border-t">
                 <td className="p-3">{section.name}</td>
 
-                <td>
-                  <button
-                    onClick={() => toggleStatus(section)}
-                    className={`px-2 py-1 rounded text-sm ${
-                      section.status
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {section.status ? "Active" : "Inactive"}
-                  </button>
-                </td>
+               <td>
+  <span
+    onClick={() => toggleStatus(section)} // remove this line if you don't want toggle
+    className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full cursor-pointer transition ${
+      section.status == 1
+        ? "bg-green-100 text-green-700"
+        : "bg-red-100 text-red-700"
+    }`}
+  >
+    {section.status == 1 ? "Active" : "Inactive"}
+  </span>
+</td>
 
                 <td className="space-x-3">
                   {/* <Link
